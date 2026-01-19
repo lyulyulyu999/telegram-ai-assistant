@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meta Assistant 管理后台</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --bg-primary: #0a0a0a;
+      --bg-secondary: #141414;
+      --bg-card: #1a1a1a;
+      --bg-hover: #252525;
+      --border: #2a2a2a;
+      --text-primary: #ffffff;
+      --text-secondary: #a0a0a0;
+      --text-muted: #666666;
+      --accent: #4ade80;
+      --accent-hover: #22c55e;
+      --accent-muted: rgba(74, 222, 128, 0.1);
+      --danger: #ef4444;
+      --warning: #f59e0b;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg-primary); color: var(--text-primary); min-height: 100vh; }
+    .app { display: flex; min-height: 100vh; }
+    .sidebar { width: 240px; background: var(--bg-secondary); border-right: 1px solid var(--border); padding: 20px 0; position: fixed; height: 100vh; overflow-y: auto; }
+    .logo { padding: 0 20px 20px; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+    .logo h1 { font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+    .logo h1 i { color: var(--accent); }
+    .logo p { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+    .nav-section { padding: 0 12px; margin-bottom: 24px; }
+    .nav-section-title { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; padding: 0 8px; margin-bottom: 8px; }
+    .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; cursor: pointer; transition: all 0.2s; color: var(--text-secondary); font-size: 14px; }
+    .nav-item:hover { background: var(--bg-hover); color: var(--text-primary); }
+    .nav-item.active { background: var(--accent-muted); color: var(--accent); }
+    .nav-item i { width: 20px; text-align: center; }
+    .main { flex: 1; margin-left: 240px; padding: 24px; }
+    .page { display: none; }
+    .page.active { display: block; }
+    .page-header { margin-bottom: 24px; }
+    .page-header h2 { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
+    .page-header p { color: var(--text-secondary); font-size: 14px; }
+    .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .card-title { font-size: 16px; font-weight: 600; }
+    .card-subtitle { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+    .stat-card .icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; font-size: 18px; }
+    .stat-card .icon.green { background: var(--accent-muted); color: var(--accent); }
+    .stat-card .icon.blue { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+    .stat-card .icon.purple { background: rgba(168, 85, 247, 0.1); color: #a855f7; }
+    .stat-card .icon.orange { background: rgba(249, 115, 22, 0.1); color: #f97316; }
+    .stat-card .value { font-size: 28px; font-weight: 700; margin-bottom: 4px; }
+    .stat-card .label { font-size: 13px; color: var(--text-secondary); }
+    .form-group { margin-bottom: 16px; }
+    .form-label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 8px; color: var(--text-secondary); }
+    .form-input, .form-textarea, .form-select { width: 100%; padding: 10px 14px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); font-size: 14px; transition: border-color 0.2s; }
+    .form-input:focus, .form-textarea:focus, .form-select:focus { outline: none; border-color: var(--accent); }
+    .form-textarea { min-height: 120px; resize: vertical; font-family: inherit; }
+    .btn { padding: 10px 16px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; border: none; display: inline-flex; align-items: center; gap: 8px; }
+    .btn-primary { background: var(--accent); color: #000; }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-secondary { background: var(--bg-hover); color: var(--text-primary); border: 1px solid var(--border); }
+    .btn-secondary:hover { background: var(--border); }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-danger:hover { background: #dc2626; }
+    .btn-sm { padding: 6px 12px; font-size: 13px; }
+    .toggle { position: relative; width: 48px; height: 26px; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg-hover); border-radius: 26px; transition: 0.3s; }
+    .toggle-slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: 0.3s; }
+    .toggle input:checked + .toggle-slider { background: var(--accent); }
+    .toggle input:checked + .toggle-slider:before { transform: translateX(22px); }
+    .prompt-list { display: grid; gap: 16px; }
+    .prompt-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; transition: border-color 0.2s; }
+    .prompt-card:hover { border-color: var(--accent); }
+    .prompt-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+    .prompt-card-title { font-size: 16px; font-weight: 600; }
+    .prompt-card-key { font-size: 12px; color: var(--accent); background: var(--accent-muted); padding: 2px 8px; border-radius: 4px; margin-left: 8px; }
+    .prompt-card-desc { font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; }
+    .prompt-card-content { font-size: 13px; color: var(--text-muted); background: var(--bg-secondary); padding: 12px; border-radius: 8px; max-height: 80px; overflow: hidden; }
+    .prompt-card-actions { display: flex; gap: 8px; margin-top: 12px; }
+    .model-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+    .model-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+    .model-card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+    .model-card-icon { width: 40px; height: 40px; border-radius: 10px; background: var(--accent-muted); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 18px; }
+    .model-card-title { font-size: 15px; font-weight: 600; }
+    .model-card-desc { font-size: 12px; color: var(--text-secondary); }
+    .model-current { background: var(--bg-secondary); padding: 12px; border-radius: 8px; margin-bottom: 12px; }
+    .model-current-label { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
+    .model-current-value { font-size: 14px; font-weight: 500; color: var(--accent); }
+    .version-list { display: flex; flex-direction: column; gap: 12px; }
+    .version-item { display: flex; justify-content: space-between; align-items: center; padding: 16px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; }
+    .version-info h4 { font-size: 14px; font-weight: 500; margin-bottom: 4px; }
+    .version-info p { font-size: 12px; color: var(--text-muted); }
+    .version-actions { display: flex; gap: 8px; }
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; visibility: hidden; transition: all 0.3s; }
+    .modal-overlay.active { opacity: 1; visibility: visible; }
+    .modal { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 24px; width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .modal-title { font-size: 18px; font-weight: 600; }
+    .modal-close { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 20px; }
+    .modal-close:hover { color: var(--text-primary); }
+    .modal-footer { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; }
+    .toast-container { position: fixed; top: 20px; right: 20px; z-index: 2000; }
+    .toast { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 14px 20px; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; animation: slideIn 0.3s ease; }
+    .toast.success { border-left: 3px solid var(--accent); }
+    .toast.error { border-left: 3px solid var(--danger); }
+    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    .setting-row { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid var(--border); }
+    .setting-row:last-child { border-bottom: none; }
+    .setting-info h4 { font-size: 14px; font-weight: 500; margin-bottom: 4px; }
+    .setting-info p { font-size: 13px; color: var(--text-secondary); }
+    .empty-state { text-align: center; padding: 40px; color: var(--text-muted); }
+    .empty-state i { font-size: 48px; margin-bottom: 16px; }
+    .empty-state p { font-size: 14px; }
+    .loading { text-align: center; padding: 40px; color: var(--text-muted); }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="logo">
+        <h1><i class="fas fa-leaf"></i> Meta Assistant</h1>
+        <p>绿茶版 管理后台</p>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">概览</div>
+        <div class="nav-item active" data-page="dashboard"><i class="fas fa-chart-pie"></i><span>仪表盘</span></div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">配置</div>
+        <div class="nav-item" data-page="prompts"><i class="fas fa-comment-dots"></i><span>提示词管理</span></div>
+        <div class="nav-item" data-page="models"><i class="fas fa-robot"></i><span>模型设置</span></div>
+        <div class="nav-item" data-page="settings"><i class="fas fa-cog"></i><span>Bot 设置</span></div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">数据</div>
+        <div class="nav-item" data-page="versions"><i class="fas fa-history"></i><span>版本管理</span></div>
+        <div class="nav-item" data-page="export"><i class="fas fa-download"></i><span>导入导出</span></div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <!-- Dashboard -->
+      <div class="page active" id="page-dashboard">
+        <div class="page-header"><h2>仪表盘</h2><p>查看系统概览和统计信息</p></div>
+        <div class="stats-grid">
+          <div class="stat-card"><div class="icon green"><i class="fas fa-sticky-note"></i></div><div class="value" id="stat-total">0</div><div class="label">总笔记数</div></div>
+          <div class="stat-card"><div class="icon blue"><i class="fas fa-calendar-day"></i></div><div class="value" id="stat-today">0</div><div class="label">今日新增</div></div>
+          <div class="stat-card"><div class="icon purple"><i class="fas fa-comment"></i></div><div class="value" id="stat-prompts">0</div><div class="label">提示词数量</div></div>
+          <div class="stat-card"><div class="icon orange"><i class="fas fa-code-branch"></i></div><div class="value" id="stat-versions">0</div><div class="label">保存的版本</div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div><div class="card-title">快速操作</div><div class="card-subtitle">常用功能入口</div></div></div>
+          <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+            <button class="btn btn-secondary" id="btn-new-prompt"><i class="fas fa-plus"></i> 新建提示词</button>
+            <button class="btn btn-secondary" id="btn-save-version"><i class="fas fa-save"></i> 保存当前版本</button>
+            <button class="btn btn-secondary" id="btn-export"><i class="fas fa-download"></i> 导出配置</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Prompts -->
+      <div class="page" id="page-prompts">
+        <div class="page-header"><h2>提示词管理</h2><p>为不同功能自定义 AI 提示词</p></div>
+        <div style="margin-bottom: 20px;"><button class="btn btn-primary" id="btn-add-prompt"><i class="fas fa-plus"></i> 新建提示词</button></div>
+        <div class="prompt-list" id="prompt-list"><div class="loading">加载中...</div></div>
+      </div>
+
+      <!-- Models -->
+      <div class="page" id="page-models">
+        <div class="page-header"><h2>模型设置</h2><p>为不同功能选择合适的 AI 模型</p></div>
+        <div class="model-grid" id="model-grid"><div class="loading">加载中...</div></div>
+      </div>
+
+      <!-- Settings -->
+      <div class="page" id="page-settings">
+        <div class="page-header"><h2>Bot 设置</h2><p>配置 Telegram Bot 的行为</p></div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom: 16px;">功能开关</div>
+          <div class="setting-row">
+            <div class="setting-info"><h4>收集反馈</h4><p>在 Bot1 收集信息后，Bot2 发送 AI 反馈</p></div>
+            <label class="toggle"><input type="checkbox" id="setting-collectFeedback"><span class="toggle-slider"></span></label>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info"><h4>AI 对话</h4><p>在 Bot2 中启用 AI 对话功能</p></div>
+            <label class="toggle"><input type="checkbox" id="setting-chatEnabled"><span class="toggle-slider"></span></label>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom: 16px;">Webhook 配置</div>
+          <div class="form-group"><label class="form-label">Webhook URL</label><input type="text" class="form-input" id="setting-webhookUrl" placeholder="https://your-domain.com"></div>
+          <button class="btn btn-primary" id="btn-save-webhook"><i class="fas fa-save"></i> 保存</button>
+        </div>
+      </div>
+
+      <!-- Versions -->
+      <div class="page" id="page-versions">
+        <div class="page-header"><h2>版本管理</h2><p>保存和恢复配置快照</p></div>
+        <div style="margin-bottom: 20px;"><button class="btn btn-primary" id="btn-create-version"><i class="fas fa-plus"></i> 保存当前版本</button></div>
+        <div class="version-list" id="version-list"><div class="loading">加载中...</div></div>
+      </div>
+
+      <!-- Export -->
+      <div class="page" id="page-export">
+        <div class="page-header"><h2>导入导出</h2><p>备份和恢复配置文件</p></div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom: 16px;">导出配置</div>
+          <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 16px;">将当前所有配置导出为 JSON 文件</p>
+          <button class="btn btn-primary" id="btn-export-config"><i class="fas fa-download"></i> 导出配置文件</button>
+        </div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom: 16px;">导入配置</div>
+          <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 16px;">从 JSON 文件导入配置（会覆盖当前配置）</p>
+          <input type="file" id="import-file" accept=".json" style="display: none;">
+          <button class="btn btn-secondary" id="btn-import-config"><i class="fas fa-upload"></i> 选择文件导入</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Prompt Modal -->
+  <div class="modal-overlay" id="prompt-modal">
+    <div class="modal">
+      <div class="modal-header"><h3 class="modal-title" id="prompt-modal-title">新建提示词</h3><button class="modal-close" id="close-prompt-modal">&times;</button></div>
+      <div class="form-group"><label class="form-label">键名（英文，用于程序识别）</label><input type="text" class="form-input" id="prompt-key" placeholder="例如: summary"></div>
+      <div class="form-group"><label class="form-label">名称</label><input type="text" class="form-input" id="prompt-name" placeholder="例如: 摘要生成器"></div>
+      <div class="form-group"><label class="form-label">描述</label><input type="text" class="form-input" id="prompt-description" placeholder="简短描述这个提示词的用途"></div>
+      <div class="form-group"><label class="form-label">提示词内容</label><textarea class="form-textarea" id="prompt-content" placeholder="输入提示词内容..."></textarea></div>
+      <div class="modal-footer"><button class="btn btn-secondary" id="cancel-prompt">取消</button><button class="btn btn-primary" id="save-prompt">保存</button></div>
+    </div>
+  </div>
+
+  <!-- Model Modal -->
+  <div class="modal-overlay" id="model-modal">
+    <div class="modal">
+      <div class="modal-header"><h3 class="modal-title">选择模型</h3><button class="modal-close" id="close-model-modal">&times;</button></div>
+      <div id="model-options"></div>
+      <div class="modal-footer"><button class="btn btn-secondary" id="cancel-model">取消</button></div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toast-container"></div>
+
+  <script>
+    // Global State
+    var config = {};
+    var versions = [];
+    var editingPromptKey = null;
+    var editingModelFunction = null;
+
+    // Toast notification
+    function showToast(message, type) {
+      type = type || 'success';
+      var container = document.getElementById('toast-container');
+      var toast = document.createElement('div');
+      toast.className = 'toast ' + type;
+      toast.innerHTML = '<i class="fas fa-' + (type === 'success' ? 'check-circle' : 'exclamation-circle') + '"></i><span>' + message + '</span>';
+      container.appendChild(toast);
+      setTimeout(function() { toast.remove(); }, 3000);
+    }
+
+    // Navigation
+    function showPage(pageId) {
+      document.querySelectorAll('.nav-item').forEach(function(item) {
+        item.classList.toggle('active', item.getAttribute('data-page') === pageId);
+      });
+      document.querySelectorAll('.page').forEach(function(page) {
+        page.classList.toggle('active', page.id === 'page-' + pageId);
+      });
+    }
+
+    // API Functions
+    function loadConfig() {
+      fetch('/api/config')
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          config = data;
+          renderPrompts();
+          renderModels();
+          renderSettings();
+          updateStats();
+        })
+        .catch(function(e) {
+          console.error('Load config error:', e);
+          showToast('加载配置失败', 'error');
+        });
+    }
+
+    function loadVersions() {
+      fetch('/api/versions')
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          versions = data;
+          renderVersions();
+          updateStats();
+        })
+        .catch(function(e) { console.error('Load versions error:', e); });
+    }
+
+    // Render Functions
+    function renderPrompts() {
+      var container = document.getElementById('prompt-list');
+      var prompts = config.prompts || {};
+      var keys = Object.keys(prompts);
+      
+      if (keys.length === 0) {
+        container.innerHTML = '<div class="empty-state"><i class="fas fa-comment-slash"></i><p>还没有提示词，点击上方按钮创建</p></div>';
+        return;
+      }
+
+      var html = '';
+      keys.forEach(function(key) {
+        var prompt = prompts[key];
+        html += '<div class="prompt-card">' +
+          '<div class="prompt-card-header"><div><span class="prompt-card-title">' + prompt.name + '</span><span class="prompt-card-key">' + key + '</span></div></div>' +
+          '<div class="prompt-card-desc">' + (prompt.description || '暂无描述') + '</div>' +
+          '<div class="prompt-card-content">' + prompt.content + '</div>' +
+          '<div class="prompt-card-actions">' +
+          '<button class="btn btn-secondary btn-sm" data-edit-prompt="' + key + '"><i class="fas fa-edit"></i> 编辑</button>' +
+          '<button class="btn btn-danger btn-sm" data-delete-prompt="' + key + '"><i class="fas fa-trash"></i> 删除</button>' +
+          '</div></div>';
+      });
+      container.innerHTML = html;
+
+      // Add event listeners
+      container.querySelectorAll('[data-edit-prompt]').forEach(function(btn) {
+        btn.addEventListener('click', function() { editPrompt(this.getAttribute('data-edit-prompt')); });
+      });
+      container.querySelectorAll('[data-delete-prompt]').forEach(function(btn) {
+        btn.addEventListener('click', function() { deletePrompt(this.getAttribute('data-delete-prompt')); });
+      });
+    }
+
+    function renderModels() {
+      var container = document.getElementById('model-grid');
+      var models = config.models || {};
+      var functionNames = {
+        collect: { name: '信息收集', icon: 'inbox', desc: '处理收集到的信息时使用' },
+        chat: { name: 'AI 对话', icon: 'comments', desc: '与用户对话时使用' },
+        draft: { name: '草稿生成', icon: 'file-alt', desc: '生成内容草稿时使用' },
+        voice: { name: '语音识别', icon: 'microphone', desc: '语音转文字时使用' }
+      };
+
+      var html = '';
+      Object.keys(models).forEach(function(func) {
+        var model = models[func];
+        var info = functionNames[func] || { name: func, icon: 'cog', desc: '' };
+        html += '<div class="model-card">' +
+          '<div class="model-card-header"><div class="model-card-icon"><i class="fas fa-' + info.icon + '"></i></div>' +
+          '<div><div class="model-card-title">' + info.name + '</div><div class="model-card-desc">' + info.desc + '</div></div></div>' +
+          '<div class="model-current"><div class="model-current-label">当前模型</div><div class="model-current-value">' + model.name + '</div></div>' +
+          '<button class="btn btn-secondary btn-sm" data-change-model="' + func + '" style="width: 100%;"><i class="fas fa-exchange-alt"></i> 切换模型</button>' +
+          '</div>';
+      });
+      container.innerHTML = html;
+
+      container.querySelectorAll('[data-change-model]').forEach(function(btn) {
+        btn.addEventListener('click', function() { openModelModal(this.getAttribute('data-change-model')); });
+      });
+    }
+
+    function renderSettings() {
+      var settings = config.botSettings || {};
+      document.getElementById('setting-collectFeedback').checked = settings.collectFeedback || false;
+      document.getElementById('setting-chatEnabled').checked = settings.chatEnabled || false;
+      document.getElementById('setting-webhookUrl').value = settings.webhookUrl || '';
+    }
+
+    function renderVersions() {
+      var container = document.getElementById('version-list');
+      if (versions.length === 0) {
+        container.innerHTML = '<div class="empty-state"><i class="fas fa-history"></i><p>还没有保存的版本</p></div>';
+        return;
+      }
+
+      var html = '';
+      versions.forEach(function(v) {
+        html += '<div class="version-item">' +
+          '<div class="version-info"><h4>' + v.name + '</h4><p>' + new Date(v.timestamp).toLocaleString('zh-CN') + '</p></div>' +
+          '<div class="version-actions">' +
+          '<button class="btn btn-secondary btn-sm" data-restore-version="' + v.id + '"><i class="fas fa-undo"></i> 恢复</button>' +
+          '<button class="btn btn-danger btn-sm" data-delete-version="' + v.id + '"><i class="fas fa-trash"></i></button>' +
+          '</div></div>';
+      });
+      container.innerHTML = html;
+
+      container.querySelectorAll('[data-restore-version]').forEach(function(btn) {
+        btn.addEventListener('click', function() { restoreVersion(this.getAttribute('data-restore-version')); });
+      });
+      container.querySelectorAll('[data-delete-version]').forEach(function(btn) {
+        btn.addEventListener('click', function() { deleteVersion(this.getAttribute('data-delete-version')); });
+      });
+    }
+
+    function updateStats() {
+      document.getElementById('stat-prompts').textContent = Object.keys(config.prompts || {}).length;
+      document.getElementById('stat-versions').textContent = versions.length;
+    }
+
+    // Prompt Functions
+    function openPromptModal(key) {
+      editingPromptKey = key || null;
+      var modal = document.getElementById('prompt-modal');
+      var title = document.getElementById('prompt-modal-title');
+      var keyInput = document.getElementById('prompt-key');
+      
+      if (key && config.prompts[key]) {
+        title.textContent = '编辑提示词';
+        keyInput.value = key;
+        keyInput.disabled = true;
+        document.getElementById('prompt-name').value = config.prompts[key].name;
+        document.getElementById('prompt-description').value = config.prompts[key].description || '';
+        document.getElementById('prompt-content').value = config.prompts[key].content;
+      } else {
+        title.textContent = '新建提示词';
+        keyInput.value = '';
+        keyInput.disabled = false;
+        document.getElementById('prompt-name').value = '';
+        document.getElementById('prompt-description').value = '';
+        document.getElementById('prompt-content').value = '';
+      }
+      modal.classList.add('active');
+    }
+
+    function closePromptModal() {
+      document.getElementById('prompt-modal').classList.remove('active');
+      editingPromptKey = null;
+    }
+
+    function savePrompt() {
+      var key = document.getElementById('prompt-key').value.trim();
+      var name = document.getElementById('prompt-name').value.trim();
+      var description = document.getElementById('prompt-description').value.trim();
+      var content = document.getElementById('prompt-content').value.trim();
+
+      if (!key || !name || !content) {
+        showToast('请填写所有必填字段', 'error');
+        return;
+      }
+
+      var url = editingPromptKey ? '/api/prompts/' + editingPromptKey : '/api/prompts';
+      var body = editingPromptKey ? { name: name, description: description, content: content } : { key: key, name: name, description: description, content: content };
+
+      fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      })
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        if (data.success) {
+          showToast('保存成功', 'success');
+          closePromptModal();
+          loadConfig();
+        } else {
+          showToast(data.error || '保存失败', 'error');
+        }
+      })
+      .catch(function() { showToast('保存失败', 'error'); });
+    }
+
+    function editPrompt(key) { openPromptModal(key); }
+
+    function deletePrompt(key) {
+      if (!confirm('确定要删除提示词 "' + config.prompts[key].name + '" 吗？')) return;
+      fetch('/api/prompts/' + key, { method: 'DELETE' })
+        .then(function() { showToast('删除成功', 'success'); loadConfig(); })
+        .catch(function() { showToast('删除失败', 'error'); });
+    }
+
+    // Model Functions
+    function openModelModal(func) {
+      editingModelFunction = func;
+      var modal = document.getElementById('model-modal');
+      var container = document.getElementById('model-options');
+      var availableModels = config.availableModels || [];
+      var currentModel = config.models[func] ? config.models[func].id : '';
+
+      var html = '';
+      availableModels.forEach(function(m) {
+        var isActive = m.id === currentModel;
+        html += '<div style="padding: 12px; border: 1px solid ' + (isActive ? 'var(--accent)' : 'var(--border)') + '; border-radius: 8px; margin-bottom: 8px; cursor: pointer;" ' +
+          'data-select-model="' + m.id + '" data-model-name="' + m.name + '">' +
+          '<div style="font-weight: 500; margin-bottom: 4px;">' + m.name + '</div>' +
+          '<div style="font-size: 12px; color: var(--text-muted);">速度: ' + m.speed + ' | 能力: ' + m.capability + '</div></div>';
+      });
+      container.innerHTML = html;
+
+      container.querySelectorAll('[data-select-model]').forEach(function(el) {
+        el.addEventListener('click', function() {
+          selectModel(this.getAttribute('data-select-model'), this.getAttribute('data-model-name'));
+        });
+      });
+
+      modal.classList.add('active');
+    }
+
+    function closeModelModal() {
+      document.getElementById('model-modal').classList.remove('active');
+      editingModelFunction = null;
+    }
+
+    function selectModel(id, name) {
+      fetch('/api/models/' + editingModelFunction, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: id, name: name, description: '' })
+      })
+      .then(function() { showToast('模型已更新', 'success'); closeModelModal(); loadConfig(); })
+      .catch(function() { showToast('更新失败', 'error'); });
+    }
+
+    // Settings Functions
+    function updateBotSetting(key, value) {
+      var body = {};
+      body[key] = value;
+      fetch('/api/bot-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      })
+      .then(function() { showToast('设置已更新', 'success'); })
+      .catch(function() { showToast('更新失败', 'error'); });
+    }
+
+    // Version Functions
+    function saveVersion() {
+      var name = prompt('请输入版本名称:', '版本 ' + new Date().toLocaleString('zh-CN'));
+      if (!name) return;
+      fetch('/api/versions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: name })
+      })
+      .then(function() { showToast('版本已保存', 'success'); loadVersions(); })
+      .catch(function() { showToast('保存失败', 'error'); });
+    }
+
+    function restoreVersion(id) {
+      if (!confirm('确定要恢复到这个版本吗？当前配置将被覆盖。')) return;
+      fetch('/api/versions/' + id + '/restore', { method: 'POST' })
+        .then(function() { showToast('版本已恢复', 'success'); loadConfig(); })
+        .catch(function() { showToast('恢复失败', 'error'); });
+    }
+
+    function deleteVersion(id) {
+      if (!confirm('确定要删除这个版本吗？')) return;
+      fetch('/api/versions/' + id, { method: 'DELETE' })
+        .then(function() { showToast('版本已删除', 'success'); loadVersions(); })
+        .catch(function() { showToast('删除失败', 'error'); });
+    }
+
+    // Export/Import
+    function exportConfig() { window.location.href = '/api/export'; }
+
+    function importConfig(file) {
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          var data = JSON.parse(e.target.result);
+          fetch('/api/import', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          })
+          .then(function() { showToast('配置已导入', 'success'); loadConfig(); })
+          .catch(function() { showToast('导入失败', 'error'); });
+        } catch (err) { showToast('文件格式错误', 'error'); }
+      };
+      reader.readAsText(file);
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+      // Load data
+      loadConfig();
+      loadVersions();
+
+      // Navigation
+      document.querySelectorAll('.nav-item').forEach(function(item) {
+        item.addEventListener('click', function() {
+          showPage(this.getAttribute('data-page'));
+        });
+      });
+
+      // Dashboard buttons
+      document.getElementById('btn-new-prompt').addEventListener('click', function() { showPage('prompts'); openPromptModal(); });
+      document.getElementById('btn-save-version').addEventListener('click', saveVersion);
+      document.getElementById('btn-export').addEventListener('click', exportConfig);
+
+      // Prompt page
+      document.getElementById('btn-add-prompt').addEventListener('click', function() { openPromptModal(); });
+      document.getElementById('close-prompt-modal').addEventListener('click', closePromptModal);
+      document.getElementById('cancel-prompt').addEventListener('click', closePromptModal);
+      document.getElementById('save-prompt').addEventListener('click', savePrompt);
+
+      // Model modal
+      document.getElementById('close-model-modal').addEventListener('click', closeModelModal);
+      document.getElementById('cancel-model').addEventListener('click', closeModelModal);
+
+      // Settings
+      document.getElementById('setting-collectFeedback').addEventListener('change', function() { updateBotSetting('collectFeedback', this.checked); });
+      document.getElementById('setting-chatEnabled').addEventListener('change', function() { updateBotSetting('chatEnabled', this.checked); });
+      document.getElementById('btn-save-webhook').addEventListener('click', function() {
+        var url = document.getElementById('setting-webhookUrl').value.trim();
+        updateBotSetting('webhookUrl', url);
+      });
+
+      // Versions
+      document.getElementById('btn-create-version').addEventListener('click', saveVersion);
+
+      // Export/Import
+      document.getElementById('btn-export-config').addEventListener('click', exportConfig);
+      document.getElementById('btn-import-config').addEventListener('click', function() { document.getElementById('import-file').click(); });
+      document.getElementById('import-file').addEventListener('change', function() { importConfig(this.files[0]); });
+    });
+  </script>
+</body>
+</html>
