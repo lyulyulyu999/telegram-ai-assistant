@@ -1,4 +1,4 @@
-# 🍵 Meta Assistant
+# Telegram AI Assistant
 
 **你的第二大脑 - 随时随地捕捉灵感，AI 帮你整理思绪**
 
