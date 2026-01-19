@@ -1,8 +1,5 @@
 # Telegram AI Assistant 🤖
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org/)
-
 **Telegram AI Assistant** - 基于 Telegram 双 Bot 架构的个人知识管理 + AI 助理系统
 
 通过两个 Telegram Bot 协作，帮助你收集、整理、检索个人知识，并提供智能化的 AI 交互体验。
@@ -76,7 +73,7 @@
 
 ```bash
 # 1. 克隆项目
-git clone https://github.com/YOUR_USERNAME/telegram-ai-assistant.git
+git clone https://github.com/lyulyulyu999/telegram-ai-assistant.git
 cd telegram-ai-assistant
 
 # 2. 配置环境变量
@@ -97,7 +94,7 @@ docker compose down
 
 ```bash
 # 1. 克隆项目
-git clone https://github.com/YOUR_USERNAME/telegram-ai-assistant.git
+git clone https://github.com/lyulyulyu999/telegram-ai-assistant.git
 cd telegram-ai-assistant
 
 # 2. 一键配置（填写所有 Token 和 Key）
@@ -275,12 +272,5 @@ docker compose up -d --build
 
 [MIT License](LICENSE)
 
-## 🙏 致谢
-
-- [node-telegram-bot-api](https://github.com/yagop/node-telegram-bot-api)
-- [ChromaDB](https://www.trychroma.com/)
-- [OpenRouter](https://openrouter.ai/)
-
----
 
 如果这个项目对你有帮助，欢迎 Star ⭐️
