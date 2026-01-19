@@ -1,0 +1,53 @@
+{
+  "name": "telegram-ai-assistant",
+  "version": "1.0.0",
+  "description": "Telegram AI Assistant - 个人知识管理 + AI 助理系统，基于 Telegram 双 Bot 架构",
+  "keywords": [
+    "telegram-bot",
+    "knowledge-management",
+    "ai-assistant",
+    "chromadb",
+    "rag",
+    "openrouter",
+    "personal-knowledge-management"
+  ],
+  "homepage": "https://github.com/YOUR_USERNAME/telegram-ai-assistant",
+  "bugs": {
+    "url": "https://github.com/YOUR_USERNAME/telegram-ai-assistant/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/YOUR_USERNAME/telegram-ai-assistant.git"
+  },
+  "license": "MIT",
+  "author": "Your Name <your.email@example.com>",
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "preinstall": "node -e \"if(process.env.npm_execpath.indexOf('yarn') !== -1) throw new Error('Please use npm')\"",
+    "postinstall": "node scripts/postinstall.js",
+    "start": "npm run start:all",
+    "start:all": "concurrently -n \"bot,admin\" -c \"cyan,green\" \"npm:start:bot\" \"npm:start:admin\"",
+    "start:bot": "npm run start --workspace=packages/bot",
+    "start:admin": "npm run start --workspace=packages/admin",
+    "dev": "concurrently -n \"bot,admin\" -c \"cyan,green\" \"npm:dev:bot\" \"npm:dev:admin\"",
+    "dev:bot": "npm run dev --workspace=packages/bot",
+    "dev:admin": "npm run dev --workspace=packages/admin",
+    "setup": "bash scripts/setup.sh",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f",
+    "docker:build": "docker compose build",
+    "lint": "echo 'Linting not configured yet'",
+    "test": "echo 'Tests not configured yet'"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}

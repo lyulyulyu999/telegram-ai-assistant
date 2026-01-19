@@ -1,0 +1,88 @@
+version: '3.8'
+
+services:
+  # ========================================
+  # ChromaDB - Vector Database
+  # ========================================
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: telegram-ai-assistant-chromadb
+    ports:
+      - "${CHROMA_PORT:-8000}:8000"
+    volumes:
+      - chroma-data:/chroma/chroma
+    environment:
+      - IS_PERSISTENT=TRUE
+      - ANONYMIZED_TELEMETRY=FALSE
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/heartbeat"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - meta-assistant
+
+  # ========================================
+  # Bot Service - Telegram Bot
+  # ========================================
+  bot:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: bot
+    container_name: telegram-ai-assistant-bot
+    ports:
+      - "${BOT_PORT:-3000}:3000"
+    volumes:
+      - ./data:/app/data
+      - ./packages/admin/data:/app/packages/admin/data:ro
+    environment:
+      - NODE_ENV=production
+      - INPUT_BOT_TOKEN=${INPUT_BOT_TOKEN}
+      - OUTPUT_BOT_TOKEN=${OUTPUT_BOT_TOKEN}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - WEBHOOK_URL=${WEBHOOK_URL}
+      - BOT_PORT=3000
+      - CHROMA_URL=http://chromadb:8000
+    depends_on:
+      chromadb:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - meta-assistant
+
+  # ========================================
+  # Admin Service - Web Dashboard
+  # ========================================
+  admin:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: admin
+    container_name: telegram-ai-assistant-admin
+    ports:
+      - "${ADMIN_PORT:-3001}:3001"
+    volumes:
+      - ./packages/admin/data:/app/packages/admin/data
+    environment:
+      - NODE_ENV=production
+      - ADMIN_PORT=3001
+    restart: unless-stopped
+    networks:
+      - meta-assistant
+
+# ========================================
+# Volumes
+# ========================================
+volumes:
+  chroma-data:
+    name: telegram-ai-assistant-chroma
+
+# ========================================
+# Networks
+# ========================================
+networks:
+  meta-assistant:
+    name: telegram-ai-assistant-network
